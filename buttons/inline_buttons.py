@@ -1,7 +1,8 @@
+from typing import List
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-def get_callback_buttons(btns: dict[str, str]):
+def get_callback_buttons(btns: List[str]):
     keyboard = InlineKeyboardBuilder()
     for text, data in btns.items():
         keyboard.add(InlineKeyboardButton(text=text,callback_data=data))
