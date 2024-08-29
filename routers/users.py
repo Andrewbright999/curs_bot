@@ -22,6 +22,8 @@ class ChickIn(StatesGroup):
 async def cmd_start(message: Message, state: FSMContext):
     user_list.check_user(message.from_user.id)
     await message.answer("""<b>Приветствую Вас в группе!</b>
+<i>Представьтесь, пожалуйста.</i>
+<b>Как Вас зовут?</b>
                          
 Этот чат создан для оповещения всех ее участников о наших встречах, новостях, для получения ссылок и рекомендованного материала.
 
@@ -62,9 +64,11 @@ async def webinar_check_in(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ChickIn.stream_pool)
     await callback.message.edit_text("""<b>Вы записались, на вебинар✅</b>
                                      
+Вам в скором времени придет ссылка на вебинар в zoom
+
 Хотим сообщить, что у нас скоро запуск терапевтической группы, хотите ли вы поучавствовать?""")
     await callback.message.edit_reply_markup(reply_markup=markup)
-    await callback.answer(f"""<a href='https://us06web.zoom.us/j/87056225147?pwd=bmbcZFjS3bScJeTgljz6pdtG1mHZrZ.1'>Вот ваша ссылка для входа на вебинар:</a>""")
+    # await callback.answer(f"""<a href='https://us06web.zoom.us/j/87056225147?pwd=bmbcZFjS3bScJeTgljz6pdtG1mHZrZ.1'>Вот ваша ссылка для входа на вебинар:</a>""")
 
 
 @router.callback_query(ChickIn.stream_pool) 
@@ -74,7 +78,8 @@ async def webinar_check_in(callback: CallbackQuery, state: FSMContext):
     if answer == "Хочу участвовать✅":
         for admin in ADMIN_LIST:
             await callback.bot.send_message(chat_id=admin, text=f"@{callback.from_user.username} хочет✅ поучавствовать в потоке")
-        await callback.message.edit_text("""Отлично, для вас будет 15%, за участие в вебинаре""")
+        await callback.message.edit_text("""Отлично!
+До встречи! Ожидайте ссылку""")
         await callback.message.delete_reply_markup()
         await state.clear()
     elif answer == "Пока думаю⏳":
