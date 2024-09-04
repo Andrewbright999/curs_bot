@@ -8,6 +8,7 @@ from aiogram.client.default import DefaultBotProperties
 from config import TG_TOKEN
 from routers.admin import router as admin_router 
 from routers.users import router as users_router 
+from routers.channel import router as channel_router 
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +19,15 @@ bot = Bot(
     default=DefaultBotProperties(
     parse_mode=ParseMode.HTML,
     ))
+
 dp = Dispatcher()
 
-        
+
 async def main() -> None:
     dp.include_routers(
         admin_router,
         users_router,
+        channel_router
         )
     await dp.start_polling(bot)
 

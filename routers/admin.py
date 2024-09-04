@@ -7,6 +7,7 @@ from aiogram.filters import Command, BaseFilter
 
 from config import ADMIN_LIST
 from users import user_list, pikle_path
+from aiogram.fsm.context import FSMContext
 
 
 
@@ -40,7 +41,10 @@ async def send_save(message: Message):
 async def cmd_start(message: Message):
     await send_save(message)
     
-
+@router.message(Command("clear")) 
+async def cmd_start(state: FSMContext):
+    await state.clear()
+    
 
 
 @router.message()

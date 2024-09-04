@@ -13,92 +13,95 @@ from buttons.inline_buttons import get_callback_buttons, buttons_list
 router = Router()
 
 
+def send_link(username, chat_id):
+    if username:
+        return "@"+username
+    else:
+        return f"https://t.me/{chat_id}"
+        
+async def admin_forward(msg: Message | CallbackQuery, add_msg: str = None, forward: bool = True):
+    for admin in ADMIN_LIST:
+        try:
+            if add_msg:
+                await msg.bot.send_message(chat_id=admin, text=add_msg)
+            if forward:
+                await msg.forward(chat_id=admin)    
+        except:
+            pass
+        
+        
 class ChickIn(StatesGroup):
-    name_get = State()
+    register_name = State()
     webinar_check_in = State()
     stream_pool = State()
 
+
 @router.message(Command("start")) 
+@router.message(F.text.lower() == "диагностика")
 async def cmd_start(message: Message, state: FSMContext):
-    user_list.check_user(message.from_user.id)
-    await message.answer("""<b>Приветствую Вас в группе!</b>
-<i>Представьтесь, пожалуйста.</i>
-<b>Как Вас зовут?</b>
-                         
-Этот чат создан для оповещения всех ее участников о наших встречах, новостях, для получения ссылок и рекомендованного материала.
-
-Благодарю за доверие!
-
-<i>Представьтесь, пожалуйста.</i>
-<b>Как Вас зовут?</b>""")
-    for admin in ADMIN_LIST:
-        await message.forward(chat_id=admin)   
-    await state.set_state(ChickIn.name_get)
-
+    state.clear()
+    uid = message.from_user.id
+    username = message.from_user.username
+    user_list.check_user(uid)
+    await admin_forward(message, add_msg=f"{send_link(username, uid)} Запустил бота", forward=False)
+    sream_btn = buttons_list(["Записаться на диагностику✅"], "check_in_")
+    markup = get_callback_buttons(sream_btn)
+    await message.answer("""<b>Приветствую Вас!</b>
+Чтобы записаться бесплатную диагностику, нажмите кнопку👇""",reply_markup=markup)
+    await state.set_state(ChickIn.register_name)
+    
+    
+@router.callback_query(F.data == "check_in_Записаться на диагностику✅")
+async def diagnostic_check_in(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(ChickIn.register_name)
+    await admin_forward(callback.message, add_msg=f"@{callback.from_user.username} записался на диагностику", forward=False )
+    await callback.message.edit_text("""Напишите пожалуйста как вас зовут...""")
 
     
-@router.message(ChickIn.name_get)
+@router.message(ChickIn.register_name)
 async def message_with_text(message: Message, state: FSMContext):
-    user_list.check_user(message.from_user.id)
-    check_in_btn = buttons_list(["Записаться на вебинар✅"], "webinar_check_in_")
-    markup = get_callback_buttons(check_in_btn)
-    await message.answer(text="""Приятно познакомится и благодарю за интерес к моей деятельности!
-                         
-<b>Приглашаю Вас на сегодняшний бесплатный вебинар</b>
-Он пройдет на платформе ZOOM в 19:00 по Москве. На нем я расскажу все о созависимости, контрзависимости, их общих чертах и отличиях. А также как из всего этого выбираться.
-Я отвечу на все ваши вопросы! Вас ждет приятный бонус и невероятная новость!
-
-С нетерпением жду встречи!""",reply_markup=markup)
-    await state.set_state(ChickIn.webinar_check_in)
-    for admin in ADMIN_LIST:
-        await message.bot.send_message(chat_id=admin, text=f"ФИО @{message.from_user.username}:")
-        await message.forward(chat_id=admin)    
-    
-@router.callback_query(ChickIn.webinar_check_in) 
-async def webinar_check_in(callback: CallbackQuery, state: FSMContext):
-    print(callback.data)
-    for admin in ADMIN_LIST:
-        await callback.bot.send_message(chat_id=admin, text=f"@{callback.from_user.username} записался на вебинар")
+    await state.clear()
+    uid = message.from_user.id
+    username = message.from_user.username
+    await admin_forward(message, add_msg=f"Имя {send_link(username, uid)}")
+    user_list.check_user(uid)
     sream_btn = buttons_list(["Хочу участвовать✅","Пока думаю⏳"], "stream_poll_")
     markup = get_callback_buttons(sream_btn)
-    await state.set_state(ChickIn.stream_pool)
-    await callback.message.edit_text("""<b>Вы записались, на вебинар✅</b>
-                                     
-Вам в скором времени придет ссылка на вебинар в zoom
+    if username == None:
+        await message.answer(text="<i>Для проведения диагностики напишите мне</i>: @tolgonai_g")
+    await message.answer(text="""Приятно познакомится!
+                         
+<b>Вы записались, на бесплатную диагностику✅</b>
 
-Хотим сообщить, что у нас скоро запуск терапевтической группы, хотите ли вы поучавствовать?""")
-    await callback.message.edit_reply_markup(reply_markup=markup)
-    # await callback.answer(f"""<a href='https://us06web.zoom.us/j/87056225147?pwd=bmbcZFjS3bScJeTgljz6pdtG1mHZrZ.1'>Вот ваша ссылка для входа на вебинар:</a>""")
+Хотим сообщить, что у нас скоро запуск терапевтической группы, хотите ли вы поучавствовать?""", reply_markup=markup)
+    
 
 
-@router.callback_query(ChickIn.stream_pool) 
+@router.callback_query(F.data.contains("stream_poll_")) 
 async def webinar_check_in(callback: CallbackQuery, state: FSMContext):
     answer = callback.data.split("_")[-1]
     await state.clear()
     if answer == "Хочу участвовать✅":
-        for admin in ADMIN_LIST:
-            await callback.bot.send_message(chat_id=admin, text=f"@{callback.from_user.username} хочет✅ поучавствовать в потоке")
-        await callback.message.edit_text("""Отлично!
-До встречи! Ожидайте ссылку""")
+        await admin_forward(callback.message, add_msg=f"@{callback.from_user.username} хочет✅ поучавствовать в потоке", forward=False)
+        await callback.message.answer("""<b>Отлично!</b>
+До скорой встречи c вами""")
         await callback.message.delete_reply_markup()
         await state.clear()
     elif answer == "Пока думаю⏳":
-        for admin in ADMIN_LIST:
-            await callback.bot.send_message(chat_id=admin, text=f"@{callback.from_user.username} пока думает⏳")
-        wait_btn = buttons_list(["Хочу записаться на поток🖐"], "stream_poll_")
+        await admin_forward(callback.message, add_msg=f"@{callback.from_user.username} пока думает⏳", forward=False)
+        wait_btn = buttons_list(["Хочу записаться на поток🖐"], "wait_poll_")
         markup = get_callback_buttons(wait_btn)
-        await callback.message.edit_text("""Хорошо, для вас будет действовать <b>15%</b>, до 5 сентября""")
-        await callback.message.edit_reply_markup(reply_markup=markup)
+        await callback.message.answer("""Хорошо, для вас будет действовать скидка <b>15%</b>, до 10 сентября""",reply_markup=markup)
+        await callback.message.edit_text(text="""Приятно познакомится!
+<b>Вы записались, на бесплатную диагностику✅</b>""")
         
         
-@router.callback_query() 
+@router.callback_query(F.data.contains("wait_poll_")) 
 async def webinar_check_in(callback: CallbackQuery):
-    answer = callback.data.split("_")[-1]
-    if answer == "Хочу записаться на поток🖐":
-        for admin in ADMIN_LIST:
-            await callback.bot.send_message(chat_id=admin, text=f"@{callback.from_user.username} подумал и решил поучавствовать в потоке")
-        await callback.message.edit_text("""Отлично, вы записались на поток со скидкой 15%""")
-        await callback.message.delete_reply_markup()
+    await admin_forward(callback.message, add_msg=f"@{callback.from_user.username} подумал и решил поучавствовать в потоке", forward=False)
+    await callback.message.edit_text("""Отлично, вы записались на поток со скидкой 15%""")
+    await callback.message.delete_reply_markup()
+
 
 
 @router.message(F.text)
