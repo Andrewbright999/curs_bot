@@ -1,3 +1,4 @@
+from typing import Union
 from aiogram import  Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -19,7 +20,7 @@ def send_link(username, chat_id):
     else:
         return f"https://t.me/{chat_id}"
         
-async def admin_forward(msg: Message | CallbackQuery, add_msg: str = None, forward: bool = True):
+async def admin_forward(msg: Union[Message, CallbackQuery], add_msg: str = None, forward: bool = True):
     for admin in ADMIN_LIST:
         try:
             if add_msg:

@@ -36,26 +36,15 @@ async def message_with_text(message: Message):
     post_text = message.text
     start_line = post_text.find("(|")
     end_line = post_text.find("|)")
-    print(end_line)
     if (start_line + end_line) > -2:
         line = post_text[start_line+2:end_line]
         post_text = post_text[:start_line]
         await message.edit_text(post_text)
         line = line.split("==")
         link = line[-1].removeprefix(" ")
-        print(link)
         caption = line[0]
         inline_kb_list = [
         [InlineKeyboardButton(text=caption, url=link)],
         ]
         kb =  InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
-        # urlkb.add(urlButton)
         await message.edit_reply_markup(reply_markup=kb)
-        
-    # print(post_text)
-"(|Записаться == https://t.me/tolgonai_curs_bot|)"
-
-
-"(|\w\w == \w |)"
-
-"Напишите боту хочу на диагнос"
