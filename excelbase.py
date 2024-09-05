@@ -1,76 +1,84 @@
 import os
 import openpyxl
 
-class TableField:
-    def __init__(self, column_title: str, letter: str) -> None:
-        self.column_title = column_title
+from  config import LESDS_FIELDS
+
+class TableCell:
+    def __init__(self, title: str, letter: str) -> None:
+        self.title = title
         self.letter = letter
 
-class FunctionalList:
-    def __init__(self, **fields):
-        for field_name, properties in fields:
-            self.field_name = TableField(title = "id",
-                letter = "A")   
-        
-        # self.id["title"] = "title"
-        # self.fields = [{
-        #     "name":
-        #         {"title":
-        #         },
-        #     "email",
-        #     "phone",
-        #     "telegram",
-        #     "check_in",
-        #     "link",
-        #     "block_bot",
-        #     }]
-        self.letters = []
-        self.titles = []
 
-
-    def __len__(self):
-        return len(self.values)
-
-    def __getitem__(self, key):
-        # если значение или тип ключа некорректны, list выбросит исключение
-        return self.values[key]
-
-    def __setitem__(self, key, value):
-        self.values[key] = value
-
-    def __delitem__(self, key):
-        del self.values[key]
-
-class Workbook:
-    def __init__(self) -> None:
-        self.id = TableField(column_title = "id", letter = "A")
-
-workbook = Workbook()
-print(workbook.id.column_title)
-
-class Workbook_Manager:
-    def __init__(self, file_path: str):
-        self.file_path = file_path     
-        if not os.path.exists(leadbook_path):
+class WorkbookManager:
+    """
+    Работает непосредственно с excel файлом
+    """
+    def __init__(self, file_path: str):    
+        self.file_path = file_path
+        if not os.path.exists(file_path):
             self.workbook = openpyxl.Workbook()
-            self.workbook.create_sheet("Контакты лидов")
-            sheet = self.workbook.active
-            sheet["A1"] = "ФИО"
-            sheet["B1"] = "Email"
-            sheet["C1"] = "Телефон"
-            sheet["D1"] = "Telegram"
-            self.workbook.save(filename=leadbook_path)
+            self.workbook.save(filename=file_path)
         else:
             self.workbook = openpyxl.load_workbook(self.file_path)
+        self.delete_sheet()
+    
             
-    def write_user(self, name:str = "", email:str = "", contact:str = "", telegram:str = "", ):
-        self.lead_sheet = self.workbook["Контакты лидов"]
-        for cell in self.lead_sheet["D"]:
-            if cell.value is None:
-                first_unfilled_cell = cell
-        first_unfilled_cell.value = telegram
-        empty_row = first_unfilled_cell.row
-        print()
+    def create_sheet(self, sheet: str = "Sheet"):
+        sheets = [sheet.title for sheet in self.workbook]
+        if (sheet in sheets) == False:
+            self.workbook.create_sheet(sheet)
+            self.workbook.save(self.file_path)
+            
+            
+    def delete_sheet(self, sheet: str = "Sheet"):
+        sheets = [sheet.title for sheet in self.workbook]
+        if sheet in sheets:
+            del self.workbook[sheet]
+            
+    def write_line(self, sheet: str = "Sheet", row_number: int = None, search_by_letter: str = "A",  **kwargs):
+        sheet = self.workbook[sheet]
+        if row_number:
+            pass
+        else:    
+            for cell in sheet[search_by_letter]:
+                print(f"Координаты: {cell.coordinate} Значение: {cell.value}")
+                if cell.value is None:
+                    row_number = cell.row
+                    break
+        
+        print(row_number)
+            # first_unfilled_cell.value = kwargs.key
+    
+    
+        
+
+class SheetManager:
+    """
+    Отвечает за работу с листами таблицы, полями на ней и тп
+    """
+    def __init__(self, table: WorkbookManager, sheet_name, fields_config):
+        self.table = table
+        self.sheet = sheet_name
+        self.table.create_sheet(sheet = self.sheet)
+        self.table.write_line(sheet = self.sheet)
+        self.sheet_name = sheet_name
+        for field in fields_config:
+            cell = fields_config[f"{field}"]
+            setattr(self, field, TableCell(title = cell["title"], letter = cell["letter"]))
+            self.table.write_line(sheet = self.sheet)
+
+table = WorkbookManager(file_path = "sheeet.xlsx")
+lead_sheet = SheetManager(table = table, sheet_name = "лиды нахуй", fields_config = LESDS_FIELDS )
+
+
+
+# sheet = SheetList()
+
+
+# workbook = Workbook()
+# print(workbook.id.column_title)
+
+
         
 
 leadbook_path = "leads.xlsx"
@@ -81,40 +89,7 @@ leadbook_path = "leads.xlsx"
 
 # leadbook.write_user(telegram="G")
 
-fields_config = {
-    "id": {
-        "letter": "A",
-        "title": "id"
-        },
-    "name": {
-        "letter": "B",
-        "title": "Имя"
-        },
-    "email": {
-        "letter": "C",
-        "title": "Email"
-        },
-    "phone": {
-        "letter": "D",
-        "title": "Телефон"
-        },
-    "telegram": {
-        "letter": "E",
-        "title": "Телеграм"
-        },
-    "check_in": {
-        "letter": "F",
-        "title": "Запись на вебинар"
-        },
-    "link": {
-        "letter": "G", 
-        "title": "Ссылка"
-        },
-    "block_bot": {
-        "letter": "H",
-        "title": "Бот заблокирован"
-        }
-}
+
 
 leads_json_example = [{
     "id": 121232132,

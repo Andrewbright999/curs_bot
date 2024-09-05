@@ -26,9 +26,9 @@ class ChannelFilter(BaseFilter):  # [1]
         
         
 
-router.message.filter(
-    ChannelFilter(chat_id = CHANNEL_ID)
-)
+# router.message.filter(
+#     ChannelFilter(chat_id = CHANNEL_ID)
+# )
 
 
 @router.channel_post()
@@ -41,7 +41,7 @@ async def message_with_text(message: Message):
         post_text = post_text[:start_line]
         await message.edit_text(post_text)
         line = line.split("==")
-        link = line[-1].replace(" ","")
+        link = line[-1].replace(" ", "")
         caption = line[0]
         inline_kb_list = [
         [InlineKeyboardButton(text=caption, url=link)],

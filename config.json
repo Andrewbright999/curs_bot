@@ -6,6 +6,35 @@
     "channels":[
         -1001820813942,
         -1002068269831
-    ]
-
+    ],
+    "leads_fields":{
+        "id": {
+            "letter": "A",
+            "title": "tg_id"
+            },
+        "name": {
+            "letter": "B",
+            "title": "Имя"
+            },
+        "telegram": {
+            "letter": "C",
+            "title": "Телеграм"
+            },
+        "webinar_check_in": {
+            "letter": "D",
+            "title": "Вебинар"
+            },
+        "diagnostic_check_in": {
+            "letter": "E",
+            "title": "Диагностика"
+        },
+        "stream_check_in": {
+            "letter": "G",
+            "title": "Хочет учавтсвовать в потоке"
+            },
+        "block_bot": {
+            "letter": "F",
+            "title": "Заблокировал бота"
+            }
+    }
 }
