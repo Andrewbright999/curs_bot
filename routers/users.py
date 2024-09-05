@@ -123,12 +123,22 @@ async def webinar_check_in(callback: CallbackQuery):
     username = callback.from_user.username
     chat_id = callback.from_user.id
     await admin_forward(callback.message, add_msg=f"{send_link(username, chat_id)} подумал и решил поучавствовать в потоке", forward=False)
+    await callback.message.delete()
     if username == None:
-        await callback.message.edit_text(text="""<b>Благодарю за доверие!<b>
-Для согласования времени записи напишите мне: @tolgonai_g""")
+        await callback.message.answer(text="""<b>Благодарю за доверие!</b>
+
+Теперь Вы в листе предзаписи. Ожидайте детальную информацию по терапевтической группе!
+Для согласования времени записи напишите мне лично @tolgonai_g
+
+<i>Толгонай</i>
+""")
     else:
-        await callback.message.edit_text("""<b>Благодарю за доверие!<b>
-Ожидайте, пожалуйста, Вашу запись""")
+        await callback.message.answer("""<b>Благодарю за доверие!</b>
+
+Теперь Вы в листе предзаписи. Ожидайте детальную информацию по терапевтической группе!
+Я свяжусь с Вами лично.
+
+<i>Толгонай</i>""")
     
 
 @router.message(F.text)
